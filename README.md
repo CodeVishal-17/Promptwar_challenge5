@@ -20,7 +20,7 @@ Copy `.env.example` to `.env.local` if you want model-written copy.
 
 ```
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.5-flash
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4o-mini
 ```

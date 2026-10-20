@@ -22,7 +22,7 @@ function providers(): Provider[] {
     list.push({
       source: "gemini",
       key: gemini,
-      model: process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash",
+      model: process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash",
     });
   }
   const openai = process.env.OPENAI_API_KEY?.trim();
@@ -99,8 +99,9 @@ export async function generateNarrative(brief: Brief): Promise<NarrativeResult> 
         continue;
       }
       return { source: provider.source, narrative };
-    } catch {
-      console.error(`${BRAND.name} narrative provider ${provider.source} failed.`);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "unknown";
+      console.error(`${BRAND.name} narrative provider ${provider.source} failed.`, detail);
       lastNotice = `The model could not be reached, so the ${BRAND.writer} wrote this plan.`;
     }
   }
