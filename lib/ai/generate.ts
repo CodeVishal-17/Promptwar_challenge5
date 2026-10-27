@@ -40,16 +40,23 @@ export function activeSource(): Source {
   return providers()[0]?.source ?? "atelier";
 }
 
+export const PROVIDER_TIMEOUT_MS = 20_000;
+export const MAX_OUTPUT_TOKENS = 4_096;
+
 async function complete(provider: Provider, prompt: string): Promise<string> {
   if (provider.source === "gemini") {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(provider.model)}:generateContent?key=${encodeURIComponent(provider.key)}`;
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, responseMimeType: "application/json" },
+        generationConfig: {
+          temperature: 0.7,
+          responseMimeType: "application/json",
+          maxOutputTokens: MAX_OUTPUT_TOKENS,
+        },
       }),
     });
     if (!response.ok) throw new Error(`Gemini returned ${response.status}`);
@@ -67,10 +74,11 @@ async function complete(provider: Provider, prompt: string): Promise<string> {
       "Content-Type": "application/json",
       Authorization: `Bearer ${provider.key}`,
     },
-    signal: AbortSignal.timeout(20_000),
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
     body: JSON.stringify({
       model: provider.model,
       temperature: 0.7,
+      max_completion_tokens: MAX_OUTPUT_TOKENS,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: "You return only valid JSON for a celebration plan." },

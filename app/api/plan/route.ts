@@ -1,6 +1,6 @@
 import { BRAND } from "@/lib/brand";
 import { generateNarrative } from "@/lib/ai/generate";
-import { allowPlanRequest } from "@/lib/rate-limit";
+import { guardPlanRequest } from "@/lib/rate-limit";
 import { composePlan } from "@/lib/planner";
 import { readBrief } from "@/lib/schema";
 import { NextResponse } from "next/server";
@@ -9,16 +9,12 @@ export const dynamic = "force-dynamic";
 
 const MAX_BODY = 20_000;
 
-function clientKey(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || "local";
-}
-
 export async function POST(request: Request) {
-  if (!allowPlanRequest(clientKey(request))) {
+  const decision = await guardPlanRequest(request);
+  if (!decision.ok) {
     return NextResponse.json(
-      { error: "Too many plans just now. Wait a minute and try again." },
-      { status: 429, headers: { "Cache-Control": "no-store" } },
+      { error: decision.error },
+      { status: decision.status, headers: { "Cache-Control": "no-store" } },
     );
   }
 
